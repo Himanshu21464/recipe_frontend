@@ -28,6 +28,10 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
+
+      // ✅ Custom overrides
+      'no-unused-vars': 'off',           // Disable unused variable warning
+      'react/prop-types': 'off',         // Disable prop-types warning
       'react/jsx-no-target-blank': 'off',
       'react-refresh/only-export-components': [
         'warn',

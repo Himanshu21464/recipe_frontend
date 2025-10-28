@@ -135,6 +135,7 @@ const RecipeForm = () => {
       carbohydrates: recipe.carbohydrates,
       protein: recipe.protein,
       dietaryPreferences: recipe.dietaryPreferences.join(", "),
+      utensils: recipe.utensils.join(", "),
       finalIngredientList: recipe.finalIngredientList,
     }).forEach(([key, val]) => formData.append(key, val));
 

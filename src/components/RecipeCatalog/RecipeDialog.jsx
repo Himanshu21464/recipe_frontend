@@ -75,7 +75,13 @@ const RecipeDialog = ({ open, onClose, recipe, onLike, onDislike }) => {
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           {/* 🥗 Recipe Image */}
           <CardMedia
             component="img"
@@ -94,11 +100,40 @@ const RecipeDialog = ({ open, onClose, recipe, onLike, onDislike }) => {
           <GlassSection title="Recipe Information">
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <Info label="Ingredients" value={recipe?.allIngredients} />
-                <Info label="Utensils" value={recipe?.utensils || "N/A"} />
+                {/* Ingredients */}
+                <Info
+                  label="Ingredients"
+                  value={
+                    recipe?.ingredients?.length > 0
+                      ? recipe.ingredients
+                          .map((i) =>
+                            `${i.quantity || ""} ${i.unit || ""} ${
+                              i.form || ""
+                            } ${i.name || ""}`.trim()
+                          )
+                          .join(", ")
+                      : recipe?.finalIngredientList || "N/A"
+                  }
+                />
+
+                {/* Utensils */}
+                <Info
+                  label="Utensils"
+                  value={
+                    Array.isArray(recipe?.utensils) &&
+                    recipe.utensils.length > 0
+                      ? recipe.utensils.join(", ")
+                      : "N/A"
+                  }
+                />
+
+                {/* Other Info */}
                 <Info label="Duration" value={`${recipe?.duration} minutes`} />
                 <Info label="Servings" value={recipe?.servings} />
-                <Info label="Dietary Preferences" value={recipe?.dietaryPreferences || "N/A"} />
+                <Info
+                  label="Dietary Preferences"
+                  value={recipe?.dietaryPreferences || "N/A"}
+                />
               </Grid>
             </Grid>
           </GlassSection>
@@ -121,7 +156,10 @@ const RecipeDialog = ({ open, onClose, recipe, onLike, onDislike }) => {
             <Grid container spacing={2}>
               <Nutrition label="Calories" value={`${recipe?.calories} kcal`} />
               <Nutrition label="Fat" value={`${recipe?.fat} g`} />
-              <Nutrition label="Carbohydrates" value={`${recipe?.carbohydrates} g`} />
+              <Nutrition
+                label="Carbohydrates"
+                value={`${recipe?.carbohydrates} g`}
+              />
               <Nutrition label="Protein" value={`${recipe?.protein} g`} />
             </Grid>
           </GlassSection>
@@ -136,7 +174,10 @@ const RecipeDialog = ({ open, onClose, recipe, onLike, onDislike }) => {
             />
             <Info label="Uploaded By" value={recipe?.username} />
             <Info label="Likes" value={recipe?.likeCount || 0} />
-            <Info label="Flagged as Inappropriate" value={recipe?.dislikeCount || 0} />
+            <Info
+              label="Flagged as Inappropriate"
+              value={recipe?.dislikeCount || 0}
+            />
           </GlassSection>
 
           <Divider sx={{ my: 3, width: "100%" }} />
@@ -154,7 +195,9 @@ const RecipeDialog = ({ open, onClose, recipe, onLike, onDislike }) => {
                 fontWeight: 600,
                 textTransform: "none",
                 background: "linear-gradient(90deg, #ff7043, #ffa726)",
-                "&:hover": { background: "linear-gradient(90deg, #ff5722, #ff9800)" },
+                "&:hover": {
+                  background: "linear-gradient(90deg, #ff5722, #ff9800)",
+                },
               }}
             >
               Like

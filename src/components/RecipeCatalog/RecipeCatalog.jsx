@@ -11,7 +11,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import FilterPanel from "./FilterPanel";
 import RecipeCard from "./RecipeCard";
-import RecipeDialog from "./RecipeDialog";
+import RecipeDialog from "./RecipeDialog/RecipeDialog.jsx";
 import { fetchRecipes, likeRecipe, dislikeRecipe } from "./api";
 
 const RecipeCatalog = () => {
@@ -91,12 +91,15 @@ const RecipeCatalog = () => {
         recipe.servings >= selectedServings[0] &&
         recipe.servings <= selectedServings[1];
 
-      const matchesDiet = selectedDietaryPreferences.every((pref) =>
-        recipe.dietaryPreferences
-          ?.toString()
-          .toLowerCase()
-          .includes(pref.toLowerCase())
-      );
+const matchesDiet = selectedDietaryPreferences.every((pref) => {
+  if (Array.isArray(recipe.dietaryPreferences)) {
+    return recipe.dietaryPreferences.some(
+      (diet) => diet.toLowerCase() === pref.toLowerCase()
+    );
+  }
+  return recipe.dietaryPreferences?.toLowerCase() === pref.toLowerCase();
+});
+
 
       return (
         matchesName &&

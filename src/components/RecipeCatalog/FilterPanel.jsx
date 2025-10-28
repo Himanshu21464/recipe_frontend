@@ -144,6 +144,7 @@ const FilterPanel = ({
               {[
                 "Vegan",
                 "Vegetarian",
+                "Non-Vegetarian",
                 "Keto",
                 "Paleo",
                 "Gluten-Free",
