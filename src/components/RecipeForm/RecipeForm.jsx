@@ -7,7 +7,12 @@ import {
   Typography,
   Slider,
   LinearProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import axios from "axios";
+import imageCompression from "browser-image-compression";
+
 import {
   ingredientsDictionary,
   conflicts,
@@ -23,31 +28,32 @@ import DietarySection from "./DietarySection";
 import UtensilSelect from "./UtensilSelect";
 import ImageUpload from "./ImageUpload";
 
+const initialRecipeState = {
+  name: "",
+  ingredients: [{ name: "", quantity: "", unit: "Gram", form: "Fresh" }],
+  steps: "",
+  duration: 30,
+  servings: 4,
+  dietaryPreferences: [],
+  calories: "",
+  fat: "",
+  carbohydrates: "",
+  protein: "",
+  image: null,
+  finalIngredientList: "",
+  utensils: [],
+  likeCount: 0,
+  dislikeCount: 0,
+};
+
 const RecipeForm = () => {
   const navigate = useNavigate();
 
-  const [recipe, setRecipe] = useState({
-    name: "",
-    ingredients: [{ name: "", quantity: "", unit: "Gram", form: "Fresh" }],
-    steps: "",
-    duration: 30,
-    servings: 4,
-    dietaryPreferences: [],
-    calories: "",
-    fat: "",
-    carbohydrates: "",
-    protein: "",
-    image: null,
-    finalIngredientList: "",
-    utensils: [],
-    likeCount: 0,
-    dislikeCount: 0,
-  });
-
+  const [recipe, setRecipe] = useState(initialRecipeState);
   const [steps, setSteps] = useState([""]);
-  const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false); // ✅ New: to track upload status
-  const [uploadProgress, setUploadProgress] = useState(0); // ✅ New: for progress bar
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   // Auto-generate final ingredient list
   useEffect(() => {
@@ -60,8 +66,33 @@ const RecipeForm = () => {
     setRecipe((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        // ✅ Compress the image before uploading
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        });
+        setRecipe((prev) => ({ ...prev, image: compressed }));
+      } catch (err) {
+        console.error("Image compression failed:", err);
+        setSnackbar({ open: true, message: "Image compression failed", severity: "error" });
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Basic validation
+    if (!recipe.name.trim() || !recipe.steps.trim() || !recipe.ingredients.length) {
+      setSnackbar({ open: true, message: "Please fill all required fields", severity: "error" });
+      return;
+    }
+
     const formData = new FormData();
     const username = localStorage.getItem("username");
 
@@ -84,57 +115,29 @@ const RecipeForm = () => {
 
     try {
       setUploading(true);
-      setUploadProgress(20); // show initial progress
+      setUploadProgress(10);
 
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://cgas.onrender.com/upload", true);
-
-      // ✅ track progress
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
+      const response = await axios.post("https://cgas.onrender.com/upload", formData, {
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percent);
-        }
-      };
+        },
+      });
 
-      xhr.onload = () => {
-        setUploading(false);
-        if (xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          alert("Recipe uploaded successfully!");
-          setMessage("Recipe uploaded successfully!");
-          setRecipe({
-            name: "",
-            ingredients: [{ name: "", quantity: "", unit: "Gram", form: "Fresh" }],
-            steps: "",
-            duration: 30,
-            servings: 4,
-            dietaryPreferences: [],
-            calories: "",
-            fat: "",
-            carbohydrates: "",
-            protein: "",
-            image: null,
-            finalIngredientList: "",
-            utensils: [],
-          });
-          setUploadProgress(0);
-        } else {
-          const err = JSON.parse(xhr.responseText);
-          setMessage(`Error: ${err.message || "Upload failed"}`);
-        }
-      };
-
-      xhr.onerror = () => {
-        setUploading(false);
-        setMessage("Error: Failed to connect to server");
-      };
-
-      xhr.send(formData);
+      if (response.status === 200) {
+        setSnackbar({ open: true, message: "Recipe uploaded successfully!", severity: "success" });
+        setRecipe(initialRecipeState);
+        setUploadProgress(0);
+      }
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Upload failed:", error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Upload failed",
+        severity: "error",
+      });
+    } finally {
       setUploading(false);
-      setMessage(`Error: ${error.message}`);
     }
   };
 
@@ -149,16 +152,6 @@ const RecipeForm = () => {
       }}
     >
       <h2 style={{ textAlign: "center" }}>Upload Recipe</h2>
-      {message && (
-        <p
-          style={{
-            color: message.includes("Error") ? "red" : "green",
-            textAlign: "center",
-          }}
-        >
-          {message}
-        </p>
-      )}
 
       <form onSubmit={handleSubmit} encType="multipart/form-data">
         <TextField
@@ -223,26 +216,18 @@ const RecipeForm = () => {
           size="small"
         />
 
-        <ImageUpload
-          handleImageChange={(e) =>
-            setRecipe((prev) => ({ ...prev, image: e.target.files[0] }))
-          }
-        />
+        <ImageUpload handleImageChange={handleImageChange} />
 
         <Button type="submit" variant="contained" fullWidth disabled={uploading}>
           {uploading ? "Uploading..." : "Submit Recipe"}
         </Button>
 
-        {/* ✅ Progress Bar */}
         {uploading && (
           <div style={{ marginTop: 15 }}>
             <LinearProgress
               variant="determinate"
               value={uploadProgress}
-              sx={{
-                height: 10,
-                borderRadius: 5,
-              }}
+              sx={{ height: 10, borderRadius: 5 }}
             />
             <Typography
               variant="body2"
@@ -255,6 +240,18 @@ const RecipeForm = () => {
           </div>
         )}
       </form>
+
+      {/* ✅ Snackbar for success/error messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
