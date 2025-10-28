@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-// src/components/Auth/LoginSignupPage.jsx
 import { MDBContainer, MDBCol, MDBRow } from "mdb-react-ui-kit";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
@@ -10,15 +9,16 @@ import RegisterForm from "./RegisterForm";
 function LoginSignupPage({ onLogin }) {
   const navigate = useNavigate();
 
+  // ✅ Extract `loading` from the hook
   const {
     isRegister,
     formData,
-    error,
     hoveredButton,
     toggleForm,
     handleChange,
     handleSubmit,
     setHoveredButton,
+    loading, // ✅ added
   } = useAuthForm(onLogin, navigate);
 
   return (
@@ -33,7 +33,7 @@ function LoginSignupPage({ onLogin }) {
         </MDBCol>
 
         <MDBCol col="4" md="6">
-          {error && <div className="alert alert-danger">{error}</div>}
+          {/* 🚫 Removed the old Bootstrap alert since we now use toast notifications */}
 
           {!isRegister ? (
             <LoginForm
@@ -43,6 +43,7 @@ function LoginSignupPage({ onLogin }) {
               toggleForm={toggleForm}
               hoveredButton={hoveredButton}
               setHoveredButton={setHoveredButton}
+              loading={loading} // ✅ pass down loading
             />
           ) : (
             <RegisterForm
@@ -52,6 +53,7 @@ function LoginSignupPage({ onLogin }) {
               toggleForm={toggleForm}
               hoveredButton={hoveredButton}
               setHoveredButton={setHoveredButton}
+              loading={loading} // ✅ pass down loading
             />
           )}
         </MDBCol>

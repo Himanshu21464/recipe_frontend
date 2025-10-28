@@ -10,6 +10,7 @@ const LoginForm = ({
   toggleForm,
   hoveredButton,
   setHoveredButton,
+  loading,
 }) => (
   <>
     <MDBInput
@@ -38,12 +39,13 @@ const LoginForm = ({
 
     <div className="text-center text-md-start mt-4 pt-2">
       <button
+         disabled={loading}
         style={hoveredButton === "login" ? buttonHoverStyle : buttonStyle}
         onMouseEnter={() => setHoveredButton("login")}
         onMouseLeave={() => setHoveredButton(null)}
         onClick={handleSubmit}
       >
-        Login
+        {loading ? "Logging in..." : "Login"}
       </button>
       <p className="small fw-bold mt-2 pt-1 mb-2">
         Don’t have an account?{" "}

@@ -11,6 +11,7 @@ const RegisterForm = ({
   toggleForm,
   hoveredButton,
   setHoveredButton,
+  loading, // ✅ Added loading prop
 }) => (
   <>
     <MDBInput
@@ -22,6 +23,7 @@ const RegisterForm = ({
       value={formData.username}
       onChange={handleChange}
     />
+
     <MDBInput
       wrapperClass="mb-4"
       label="Email address"
@@ -31,6 +33,7 @@ const RegisterForm = ({
       value={formData.email}
       onChange={handleChange}
     />
+
     <MDBInput
       wrapperClass="mb-4"
       label="Password"
@@ -40,6 +43,7 @@ const RegisterForm = ({
       value={formData.password}
       onChange={handleChange}
     />
+
     <MDBInput
       wrapperClass="mb-4"
       label="Confirm Password"
@@ -52,13 +56,15 @@ const RegisterForm = ({
 
     <div className="text-center text-md-start mt-4 pt-2">
       <button
+        disabled={loading}
         style={hoveredButton === "register" ? buttonHoverStyle : buttonStyle}
         onMouseEnter={() => setHoveredButton("register")}
         onMouseLeave={() => setHoveredButton(null)}
         onClick={handleSubmit}
       >
-        Register
+        {loading ? "Registering..." : "Register"}
       </button>
+
       <p className="small fw-bold mt-2 pt-1 mb-2">
         Already have an account?{" "}
         <a href="#!" className="link-danger" onClick={toggleForm}>

@@ -18,7 +18,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Slider from '@mui/material/Slider';
-import { ingredientsDictionary, conflicts, dietaryOptions, utensilOptions  } from '../../src/components/Ingredients.js';
+import { ingredientsDictionary, conflicts, dietaryOptions, utensilOptions  } from '../Ingredients.js';
 
 
 const RecipeForm = () => {

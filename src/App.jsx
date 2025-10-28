@@ -5,7 +5,10 @@ import RecipeForm from './components/RecipeForm/RecipeForm.jsx';
 import RecipeCatalog from './components/RecipeCatalog/RecipeCatalog.jsx';
 import HomePage from './components/HomePage/HomePage';
 import LoginSignupPage from './components/Auth/LoginSignupPage.jsx';
-import DeleteRecipe from './components/DeleteRecipe';
+import DeleteRecipe from './components/DeleteRecipe/DeleteRecipe.jsx';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 function App() {
   const [username, setUsername] = useState(null);
@@ -49,6 +52,16 @@ function App() {
           flexDirection: 'column',
         }}
       >
+        <ToastContainer
+          position="top-right"
+          autoClose={2500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="colored"
+        />
         {/* Main Header */}
         <AppBar
           position="static"
@@ -199,6 +212,7 @@ function App() {
         </Box>
       </Box>
     </Router>
+    
   );
 }
 
