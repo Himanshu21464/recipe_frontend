@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
+  Box,
   Button,
   TextField,
   Typography,
@@ -9,9 +9,16 @@ import {
   LinearProgress,
   Snackbar,
   Alert,
+  Card,
+  CardContent,
+  Divider,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { useThemeContext } from "../../context/ThemeContext";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import imageCompression from "browser-image-compression";
+import { useAuth } from "../../context/AuthContext";
 
 import {
   ingredientsDictionary,
@@ -20,7 +27,10 @@ import {
   utensilOptions,
 } from "./Ingredients";
 
-import { generateFinalIngredientList, formatDuration } from "./utils";
+import {
+  generateFinalIngredientList,
+  formatDuration,
+} from "./utils";
 import IngredientSection from "./IngredientSection";
 import StepSection from "./StepSection";
 import NutritionSection from "./NutritionSection";
@@ -48,14 +58,21 @@ const initialRecipeState = {
 
 const RecipeForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const theme = useTheme();
+  const { mode } = useThemeContext();
 
   const [recipe, setRecipe] = useState(initialRecipeState);
   const [steps, setSteps] = useState([""]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  // Auto-generate final ingredient list
+  // ✅ Auto-generate final ingredient list
   useEffect(() => {
     const finalList = generateFinalIngredientList(recipe.ingredients);
     setRecipe((prev) => ({ ...prev, finalIngredientList: finalList }));
@@ -70,7 +87,6 @@ const RecipeForm = () => {
     const file = e.target.files[0];
     if (file) {
       try {
-        // ✅ Compress the image before uploading
         const compressed = await imageCompression(file, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1024,
@@ -79,7 +95,11 @@ const RecipeForm = () => {
         setRecipe((prev) => ({ ...prev, image: compressed }));
       } catch (err) {
         console.error("Image compression failed:", err);
-        setSnackbar({ open: true, message: "Image compression failed", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Image compression failed",
+          severity: "error",
+        });
       }
     }
   };
@@ -87,14 +107,22 @@ const RecipeForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Basic validation
     if (!recipe.name.trim() || !recipe.steps.trim() || !recipe.ingredients.length) {
-      setSnackbar({ open: true, message: "Please fill all required fields", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Please fill all required fields",
+        severity: "error",
+      });
       return;
     }
 
     const formData = new FormData();
-    const username = localStorage.getItem("username");
+
+    let username = user?.username;
+    if (!username) {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      username = storedUser?.username || "UnknownUser";
+    }
 
     Object.entries({
       name: recipe.name,
@@ -119,13 +147,19 @@ const RecipeForm = () => {
 
       const response = await axios.post("https://cgas.onrender.com/upload", formData, {
         onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
           setUploadProgress(percent);
         },
       });
 
       if (response.status === 200) {
-        setSnackbar({ open: true, message: "Recipe uploaded successfully!", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Recipe uploaded successfully!",
+          severity: "success",
+        });
         setRecipe(initialRecipeState);
         setUploadProgress(0);
       }
@@ -142,106 +176,181 @@ const RecipeForm = () => {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "auto",
-        padding: 20,
-        background: "#f4f4f4",
-        borderRadius: 12,
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundImage:
+          mode === "light"
+            ? `url("https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=2000&q=80")`
+            : `url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=2000&q=80")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        p: 4,
       }}
     >
-      <h2 style={{ textAlign: "center" }}>Upload Recipe</h2>
+      {/* Frosted glass card */}
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: 700,
+          p: 4,
+          borderRadius: 4,
+          boxShadow:
+            mode === "light"
+              ? "0px 4px 30px rgba(0,0,0,0.2)"
+              : "0px 4px 30px rgba(255,255,255,0.1)",
+          backgroundColor:
+            mode === "light"
+              ? "rgba(255, 255, 255, 0.7)"
+              : "rgba(25, 25, 25, 0.6)",
+          backdropFilter: "blur(15px)",
+          WebkitBackdropFilter: "blur(15px)",
+          border: `1px solid ${
+            mode === "light" ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)"
+          }`,
+          transition: "0.3s ease-in-out",
+        }}
+      >
+        <CardContent>
+          <Typography
+            variant="h5"
+            align="center"
+            sx={{
+              mb: 3,
+              fontWeight: "bold",
+              color: theme.palette.primary.main,
+              letterSpacing: "0.5px",
+            }}
+          >
+            Upload Your Recipe
+          </Typography>
 
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <TextField
-          label="Recipe Name"
-          name="name"
-          value={recipe.name}
-          onChange={handleChange}
-          fullWidth
-          required
-          margin="normal"
-          size="small"
-        />
+          <Divider sx={{ mb: 3, opacity: 0.5 }} />
 
-        <IngredientSection
-          recipe={recipe}
-          setRecipe={setRecipe}
-          ingredientsDictionary={ingredientsDictionary}
-        />
-
-        <UtensilSelect
-          recipe={recipe}
-          setRecipe={setRecipe}
-          utensilOptions={utensilOptions}
-        />
-
-        <DietarySection
-          recipe={recipe}
-          setRecipe={setRecipe}
-          dietaryOptions={dietaryOptions}
-          conflicts={conflicts}
-        />
-
-        <NutritionSection recipe={recipe} setRecipe={setRecipe} />
-
-        <StepSection recipe={recipe} setRecipe={setRecipe} steps={steps} setSteps={setSteps} />
-
-        <Typography gutterBottom>
-          Preparation Time: {formatDuration(recipe.duration)}
-        </Typography>
-        <Slider
-          value={recipe.duration}
-          onChange={(_, val) => setRecipe((prev) => ({ ...prev, duration: val }))}
-          step={5}
-          min={0}
-          max={360}
-          valueLabelDisplay="auto"
-          valueLabelFormat={formatDuration}
-        />
-
-        <TextField
-          label="Servings (Max allowed: 10)"
-          value={recipe.servings}
-          onChange={(e) =>
-            setRecipe((prev) => ({
-              ...prev,
-              servings: Math.max(0, Math.min(10, parseFloat(e.target.value))),
-            }))
-          }
-          fullWidth
-          margin="normal"
-          type="number"
-          size="small"
-        />
-
-        <ImageUpload handleImageChange={handleImageChange} />
-
-        <Button type="submit" variant="contained" fullWidth disabled={uploading}>
-          {uploading ? "Uploading..." : "Submit Recipe"}
-        </Button>
-
-        {uploading && (
-          <div style={{ marginTop: 15 }}>
-            <LinearProgress
-              variant="determinate"
-              value={uploadProgress}
-              sx={{ height: 10, borderRadius: 5 }}
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
+            <TextField
+              label="Recipe Name"
+              name="name"
+              value={recipe.name}
+              onChange={handleChange}
+              fullWidth
+              required
+              margin="normal"
+              size="small"
+              variant="outlined"
             />
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              align="center"
-              sx={{ marginTop: 1 }}
-            >
-              {uploadProgress}% uploaded
-            </Typography>
-          </div>
-        )}
-      </form>
 
-      {/* ✅ Snackbar for success/error messages */}
+            <IngredientSection
+              recipe={recipe}
+              setRecipe={setRecipe}
+              ingredientsDictionary={ingredientsDictionary}
+            />
+
+            <UtensilSelect
+              recipe={recipe}
+              setRecipe={setRecipe}
+              utensilOptions={utensilOptions}
+            />
+
+            <DietarySection
+              recipe={recipe}
+              setRecipe={setRecipe}
+              dietaryOptions={dietaryOptions}
+              conflicts={conflicts}
+            />
+
+            <NutritionSection recipe={recipe} setRecipe={setRecipe} />
+
+            <StepSection
+              recipe={recipe}
+              setRecipe={setRecipe}
+              steps={steps}
+              setSteps={setSteps}
+            />
+
+            <Typography gutterBottom sx={{ mt: 2, fontWeight: 500 }}>
+              Preparation Time: {formatDuration(recipe.duration)}
+            </Typography>
+            <Slider
+              value={recipe.duration}
+              onChange={(_, val) =>
+                setRecipe((prev) => ({ ...prev, duration: val }))
+              }
+              step={5}
+              min={0}
+              max={360}
+              valueLabelDisplay="auto"
+              valueLabelFormat={formatDuration}
+              sx={{
+                color: theme.palette.primary.main,
+              }}
+            />
+
+            <TextField
+              label="Servings (Max allowed: 10)"
+              value={recipe.servings}
+              onChange={(e) =>
+                setRecipe((prev) => ({
+                  ...prev,
+                  servings: Math.max(
+                    0,
+                    Math.min(10, parseFloat(e.target.value))
+                  ),
+                }))
+              }
+              fullWidth
+              margin="normal"
+              type="number"
+              size="small"
+            />
+
+            <ImageUpload handleImageChange={handleImageChange} />
+
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={uploading}
+              sx={{
+                mt: 3,
+                py: 1.2,
+                fontWeight: "bold",
+                borderRadius: 2,
+                textTransform: "none",
+                boxShadow: "0px 3px 10px rgba(0,0,0,0.2)",
+              }}
+            >
+              {uploading ? "Uploading..." : "Submit Recipe"}
+            </Button>
+
+            {uploading && (
+              <Box sx={{ mt: 3 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={uploadProgress}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  align="center"
+                  sx={{ mt: 1, color: theme.palette.text.secondary }}
+                >
+                  {uploadProgress}% uploaded
+                </Typography>
+              </Box>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* ✅ Snackbar for feedback */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
@@ -252,7 +361,7 @@ const RecipeForm = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

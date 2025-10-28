@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { registerUser, loginUser } from "./AuthService";
+import { useAuth } from "../../context/AuthContext"; // ✅ import context
 
 export const useAuthForm = (onLogin, navigate) => {
+  const { login } = useAuth(); // ✅ use context
   const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -12,11 +14,9 @@ export const useAuthForm = (onLogin, navigate) => {
     confirmPassword: "",
   });
   const [hoveredButton, setHoveredButton] = useState(null);
-  const [loading, setLoading] = useState(false); // ✅ new loading state
+  const [loading, setLoading] = useState(false);
 
-  const toggleForm = () => {
-    setIsRegister((prev) => !prev);
-  };
+  const toggleForm = () => setIsRegister((prev) => !prev);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,7 +25,7 @@ export const useAuthForm = (onLogin, navigate) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return; // prevent multiple clicks
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -42,7 +42,6 @@ export const useAuthForm = (onLogin, navigate) => {
   const handleRegister = async () => {
     const { username, email, password, confirmPassword } = formData;
 
-    // ✅ Instant validation feedback
     if (!username || !email || !password || !confirmPassword) {
       toast.warning("All fields are required!");
       return;
@@ -54,7 +53,6 @@ export const useAuthForm = (onLogin, navigate) => {
 
     try {
       const data = await registerUser(username, email, password);
-
       if (data?.message === "User registered successfully" || data?.success) {
         toast.success("🎉 Registration successful!");
         setIsRegister(false);
@@ -81,8 +79,15 @@ export const useAuthForm = (onLogin, navigate) => {
 
       if (data.user) {
         toast.success("✅ Login successful!");
+        
+        // ✅ Update both localStorage and context
         localStorage.setItem("user", JSON.stringify(data.user));
+        login(data.user); // ✅ update AuthContext instantly
+        
+        // Optional callback for parent if needed
         onLogin?.(data.user.username);
+
+        // ✅ Redirect home (Header will update automatically)
         navigate("/");
       } else {
         toast.error(data.message || "Invalid credentials. Please try again.");
@@ -101,6 +106,6 @@ export const useAuthForm = (onLogin, navigate) => {
     handleChange,
     handleSubmit,
     setHoveredButton,
-    loading, // ✅ expose loading for buttons
+    loading,
   };
 };

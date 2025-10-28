@@ -1,63 +1,150 @@
-/* eslint-disable react/prop-types */
-import { AppBar, Toolbar, Typography, Button, Menu, MenuItem } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Menu,
+  MenuItem,
+  Avatar,
+  IconButton,
+  Tooltip,
+  useTheme,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useThemeContext } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import HomeIcon from "@mui/icons-material/Home";
+import { useNavigate } from "react-router-dom";
 
-const Header = ({ username, onLogout }) => {
+const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const { mode, toggleTheme } = useThemeContext();
+  const { user, logout } = useAuth();
+  const theme = useTheme();
+  const navigate = useNavigate();
 
   const handleClick = (e) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
+  const handleLogout = () => {
+    logout();
+    handleClose();
+    navigate("/");
+  }
+
   return (
     <AppBar
-      position="static"
+      position="sticky"
       sx={{
-        backgroundColor: "#333",
+        backdropFilter: "blur(12px)",
+        background:
+          mode === "light"
+            ? "rgba(255,255,255,0.8)"
+            : "rgba(18,18,18,0.8)",
+        color: theme.palette.text.primary,
         boxShadow: "none",
-        opacity: 0.9,
-        height: 80,
+        borderBottom: `1px solid ${
+          mode === "light" ? "#eee" : "#333"
+        }`,
       }}
     >
-      <Toolbar sx={{ minHeight: "80px", padding: "0 24px" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", py: 1 }}>
         <Typography
-          variant="h4"
+          variant="h5"
           sx={{
-            flexGrow: 1,
             fontWeight: "bold",
-            fontSize: "1.8rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            color: theme.palette.primary.main,
           }}
         >
-          RecipeHub
+          <RestaurantMenuIcon /> RecipeHub
         </Typography>
 
-        <Button color="inherit" component={Link} to="/" sx={{ fontSize: "1rem", ml: 2 }}>
-          Home
-        </Button>
-        <Button color="inherit" component={Link} to="/catalog" sx={{ fontSize: "1rem", ml: 2 }}>
-          View Recipes
-        </Button>
-
-        {!username ? (
-          <Button color="inherit" component={Link} to="/login-signup" sx={{ fontSize: "1rem", ml: 2 }}>
-            Login/Register
+        <div>
+          <Button component={Link} to="/" color="inherit" startIcon={<HomeIcon />} sx={{ mx: 1 }}>
+            Home
           </Button>
-        ) : (
-          <>
-            <Button color="inherit" onClick={handleClick} sx={{ fontSize: "1rem", ml: 2 }}>
-              Hi! {username}
+          <Button
+            component={Link}
+            to="/catalog"
+            color="inherit"
+            startIcon={<MenuBookIcon />}
+            sx={{ mx: 1 }}
+          >
+            View Recipes
+          </Button>
+
+          <IconButton onClick={toggleTheme} color="inherit" sx={{ mx: 1 }}>
+            {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
+          </IconButton>
+
+          {user ? (
+            <>
+              <Tooltip title={user.name || user.username || "Account"}>
+                <IconButton onClick={handleClick} sx={{ p: 0 }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: theme.palette.primary.main,
+                      color: "white",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {(user?.name?.[0] ||
+                      user?.username?.[0] ||
+                      user?.email?.[0] ||
+                      "U"
+                    ).toUpperCase()}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    background: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                  },
+                }}
+              >
+                <MenuItem component={Link} to="/RecipeForm" onClick={handleClose} sx={{ gap: 1 }}>
+                  <AddCircleOutlineIcon /> Upload Recipe
+                </MenuItem>
+                <MenuItem component={Link} to="/delete-recipe" onClick={handleClose} sx={{ gap: 1 }}>
+                  <DeleteOutlineIcon /> Delete Recipes
+                </MenuItem>
+                <MenuItem
+                  onClick={
+                    handleLogout}
+                  sx={{ gap: 1 }}
+                >
+                  <LogoutIcon /> Logout
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Button
+              component={Link}
+              to="/login-signup"
+              variant="outlined"
+              sx={{ mx: 1 }}
+            >
+              Login / Register
             </Button>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-              <MenuItem onClick={() => { handleClose(); onLogout(); }}>Logout</MenuItem>
-              <MenuItem component={Link} to="/delete-recipe" onClick={handleClose}>
-                Delete Recipes
-              </MenuItem>
-              <MenuItem component={Link} to="/RecipeForm" onClick={handleClose}>
-                Upload Recipe
-              </MenuItem>
-            </Menu>
-          </>
-        )}
+          )}
+        </div>
       </Toolbar>
     </AppBar>
   );

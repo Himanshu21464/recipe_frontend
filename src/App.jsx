@@ -7,31 +7,27 @@ import RecipeForm from "./components/RecipeForm/RecipeForm.jsx";
 import RecipeCatalog from "./components/RecipeCatalog/RecipeCatalog.jsx";
 import DeleteRecipe from "./components/DeleteRecipe/DeleteRecipe.jsx";
 import LoginSignupPage from "./components/Auth/LoginSignupPage.jsx";
+import { ThemeContextProvider } from "./context/ThemeContext.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 function App() {
   return (
-    <Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={2500}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
-
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/catalog" element={<RecipeCatalog />} />
-          <Route path="/RecipeForm" element={<RecipeForm />} />
-          <Route path="/delete-recipe" element={<DeleteRecipe />} />
-          <Route path="/login-signup" element={<LoginSignupPage />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <ThemeContextProvider>
+      <AuthProvider>
+      <Router>
+        <ToastContainer position="top-right" autoClose={2500} theme="colored" />
+        <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<RecipeCatalog />} />
+            <Route path="/RecipeForm" element={<RecipeForm />} />
+            <Route path="/delete-recipe" element={<DeleteRecipe />} />
+            <Route path="/login-signup" element={<LoginSignupPage />} />
+          </Routes>
+        </Layout>
+      </Router>
+      </AuthProvider>
+    </ThemeContextProvider>
   );
 }
 
